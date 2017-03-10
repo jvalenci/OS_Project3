@@ -3,11 +3,15 @@
 
 #define SOLUTION
 #include <semaphore.h>
+#include <pthread.h>
 
 struct cube;
 
+//thread and semaphore stuff to be shared across threads
 sem_t continuousMove;
 sem_t singleStepMove;
+pthread_mutex_t mutexRoom;
+pthread_mutex_t mutexStep;
 
 struct wizard {
 	int x;

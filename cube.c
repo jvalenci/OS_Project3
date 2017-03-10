@@ -7,7 +7,6 @@
 #include <assert.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <semaphore.h>
 #include "cube.h"
 #include "wizard.h"
 
@@ -21,8 +20,7 @@
 //thread and mutex stuff
 pthread_t *aWizardThreads = NULL;
 pthread_t *bWizardThreads = NULL;
-pthread_mutex_t mutexRoom;
-pthread_mutex_t mutexStep;
+
 
 
 void
@@ -507,7 +505,17 @@ int
 try_room(struct wizard *w, struct room *oldroom, struct room* newroom)
 {
 	/* Fill in */
+	int i;
+	for (i = 0; i < 2; i++)
+	{
+		if(newroom->wizards[i] == NULL)
+		{
+			//there is an empty spot in the room
+			return 0;
+		}
+	}
 
+	//room is full
 	return 1;
 }
 

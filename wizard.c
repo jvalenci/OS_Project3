@@ -37,6 +37,9 @@ wizard_func(void *wizard_descr)
 			printf("Wizard %c%d in room (%d,%d) wants to go to room (%d,%d)\n",
 				self->team, self->id, oldroom->x, oldroom->y, newroom->x, newroom->y);
 
+			//locks until if find a room to be in so multi wizards are not getting into the same room
+			pthread_mutex_lock(&mutexRoom);
+
 			if (try_room(self, oldroom, newroom))
 			{
 				/* Waits a random amount of time */
@@ -62,6 +65,9 @@ wizard_func(void *wizard_descr)
 
 		/* Self is active and has control over both rooms */
 		switch_rooms(self, oldroom, newroom);
+
+		//unlocks once a wizard is in a roomm
+		pthread_mutex_unlock(&mutexRoom);
 
 		other = find_opponent(self, newroom);
 
