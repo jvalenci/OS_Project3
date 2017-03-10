@@ -17,6 +17,8 @@
 #define HOWBUSY 100000000
 #define TRUE 1
 #define FALSE 0
+pthread_t *aWizardThreads;
+pthread_t *bWizardThreads;
 
 void 
 command_line_usage()
@@ -179,6 +181,7 @@ interface(void *cube_ref)
   char *line;
   char *command;
   int i;
+  int j;
 
   cube = (struct cube *)cube_ref;
   assert(cube);
@@ -217,11 +220,19 @@ interface(void *cube_ref)
 	  else
 	    {
 	      cube->game_status = 0;
-	      
-	      /* Start the game */
 
 	      /* Fill in */
+        //start the game by creating all the threads
+        
+        //create the threads team A wizards
+        for(j = 0; j < cube->teamA_size; j++){
+          pthread_create(&aWizardThreads[j], NULL, wizard_func, (void*)cube->teamA_wizards[j]);
+        }
 
+        //create the threads team B wizards
+        for(j = 0; j < cube->teamB_size; j++){
+          pthread_create(&bWizardThreads[j], NULL, wizard_func, (void*)cube->teamB_wizards[j]);
+        }
 
 
 	    }
@@ -256,6 +267,13 @@ main(int argc, char** argv)
   struct wizard *wizard_descr;
   int i, j;
 
+  //threads to be created
+  aWizardThreads = (pthread_t*)malloc(DEFAULT_TEAM_SIZE * sizeof(pthread_t));
+  bWizardThreads = (pthread_t*)malloc(DEFAULT_TEAM_SIZE * sizeof(pthread_t));;
+
+  assert(aWizardThreads);
+  assert(bWizardThreads);
+
 
   /* Parse command line and fill:
      teamA_size, timeBsize, cube_size, and seed */
@@ -273,7 +291,7 @@ main(int argc, char** argv)
               exit(-1);
             }
           cube_size = atoi(argv[i]);
-	  if (cube_size == 0)
+	  if (cube_size <= 0)
 	    {
               fprintf(stderr, "Illegal cube size\n");
               exit(-1);
@@ -289,11 +307,13 @@ main(int argc, char** argv)
               exit(-1);
             }
           teamA_size = atoi(argv[i]);
-	  if (teamA_size == 0)
+	  if (teamA_size <= 0)
 	    {
               fprintf(stderr, "Illegal team size\n");
               exit(-1);
 	    }
+      pthread_t *temp = realloc(aWizardThreads, teamA_size * sizeof(pthread_t));
+      aWizardThreads = temp;
         }
       else if (!strcmp(argv[i], "-teamB")) 
         {
@@ -305,11 +325,13 @@ main(int argc, char** argv)
               exit(-1);
             }
           teamB_size = atoi(argv[i]);
-	  if (teamB_size == 0)
+	  if (teamB_size <= 0)
 	    {
               fprintf(stderr, "Illegal team size\n");
               exit(-1);
 	    }
+      pthread_t *temp = realloc(bWizardThreads, teamB_size * sizeof(pthread_t));
+      bWizardThreads = temp;
         }
       else if (!strcmp(argv[i], "-seed")) 
         {
@@ -418,10 +440,19 @@ main(int argc, char** argv)
     }
 
   /* Fill in */
-  
+  //
 
   /* Goes in the interface loop */
   res = interface(cube);
+
+  //wait for the other threads to terminate to have a clean exit
+  for(i = 0; i < cube->teamA_size; i++){
+    pthread_join(aWizardThreads[i], NULL);
+  }
+
+  for(i = 0; i < cube->teamB_size; i++){
+    pthread_join(bWizardThreads[i], NULL);
+  }
 
   exit(res);
 }
