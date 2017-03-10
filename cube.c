@@ -17,8 +17,11 @@
 #define HOWBUSY 100000000
 #define TRUE 1
 #define FALSE 0
+
+//thread and mutex stuff
 pthread_t *aWizardThreads;
 pthread_t *bWizardThreads;
+pthread_mutex_t mutexRoom;
 
 void 
 command_line_usage()
@@ -224,6 +227,8 @@ interface(void *cube_ref)
 	      /* Fill in */
         //start the game by creating all the threads
         
+        pthread_mutex_init(&mutexRoom, NULL);
+
         //create the threads team A wizards
         for(j = 0; j < cube->teamA_size; j++){
           pthread_create(&aWizardThreads[j], NULL, wizard_func, (void*)cube->teamA_wizards[j]);
@@ -454,6 +459,9 @@ main(int argc, char** argv)
     pthread_join(bWizardThreads[i], NULL);
   }
 
+  free(aWizardThreads);
+  free(bWizardThreads);
+  pthread_mutex_destroy(&mutexRoom);
   exit(res);
 }
 

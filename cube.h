@@ -2,6 +2,7 @@
 #define _CUBE_H
 
 #define SOLUTION
+#include <semaphore.h>
 
 struct cube;
 
