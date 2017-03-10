@@ -6,6 +6,9 @@
 
 struct cube;
 
+sem_t continuousMove;
+sem_t singleStepMove;
+
 struct wizard {
 	int x;
 	int y;

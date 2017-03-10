@@ -30,6 +30,7 @@ wizard_func(void *wizard_descr)
 	/* Infinite loop */
 	while (1)
 	{
+		sem_wait(&singleStepMove);
 		/* Loops until he's able to get a hold on both the old and new rooms */
 		while (1)
 		{

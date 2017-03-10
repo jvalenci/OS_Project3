@@ -7,7 +7,7 @@
 #include <assert.h>
 #include <readline/readline.h>
 #include <readline/history.h>
-
+#include <semaphore.h>
 #include "cube.h"
 #include "wizard.h"
 
@@ -19,9 +19,11 @@
 #define FALSE 0
 
 //thread and mutex stuff
-pthread_t *aWizardThreads;
-pthread_t *bWizardThreads;
+pthread_t *aWizardThreads = NULL;
+pthread_t *bWizardThreads = NULL;
 pthread_mutex_t mutexRoom;
+pthread_mutex_t mutexStep;
+
 
 void
 command_line_usage()
@@ -220,9 +222,12 @@ interface(void *cube_ref)
 				cube->game_status = 0;
 
 				/* Fill in */
-			  //start the game by creating all the threads
-
+			  //start the game by creating all the threads and init semaphores
+			  //init single step key
+				pthread_mutex_init(&mutexStep, NULL);
 				pthread_mutex_init(&mutexRoom, NULL);
+				sem_init(&continuousMove, 0, 0);
+				sem_init(&singleStepMove, 0, 0);
 
 				//create the threads team A wizards
 				for (j = 0; j < cube->teamA_size; j++) {
@@ -239,6 +244,17 @@ interface(void *cube_ref)
 		{
 			/* Stop the game */
 			return 1;
+		}
+		else if (!strcmp(command, "s"))
+		{
+			sem_post(&singleStepMove);
+		}
+		else if (!strcmp(command, "c"))
+		{
+			for (j = 0; j < (cube->teamA_size + cube->teamB_size); j++)
+			{
+				sem_post(&continuousMove);
+			}
 		}
 		else
 		{
