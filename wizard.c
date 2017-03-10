@@ -30,10 +30,13 @@ wizard_func(void *wizard_descr)
 	/* Infinite loop */
 	while (1)
 	{
+		//sem_wait(&commandLineCurser);
 		sem_wait(&singleStepMove);
+
 		/* Loops until he's able to get a hold on both the old and new rooms */
 		while (1)
 		{
+			
 			printf("Wizard %c%d in room (%d,%d) wants to go to room (%d,%d)\n",
 				self->team, self->id, oldroom->x, oldroom->y, newroom->x, newroom->y);
 
@@ -47,6 +50,11 @@ wizard_func(void *wizard_descr)
 
 				/* Chooses the new room */
 				newroom = choose_room(self);
+
+				printf("Request denied, room locked!\n");
+				pthread_mutex_unlock(&mutexRoom);
+				sem_post(&commandLineCurser);
+				sem_wait(&singleStepMove);
 
 				/* Goes back to the initial state and try again */
 				continue;
@@ -74,7 +82,7 @@ wizard_func(void *wizard_descr)
 		/* If there is not another wizard does nothing */
 		if (other == NULL)
 		{
-			printf("Wizard %c%d in room (%d,%d) finds nobody around \n",
+			printf("Wizard %c%d in room (%d,%d) finds nobody around\n",
 				self->team, self->id, newroom->x, newroom->y);
 			/* Fill in */
 		}
@@ -115,6 +123,7 @@ wizard_func(void *wizard_descr)
 
 		oldroom = newroom;
 		newroom = choose_room(self);
+		sem_post(&commandLineCurser);
 	}
 
 	return NULL;

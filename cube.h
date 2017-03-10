@@ -10,6 +10,7 @@ struct cube;
 //thread and semaphore stuff to be shared across threads
 sem_t continuousMove;
 sem_t singleStepMove;
+sem_t commandLineCurser;
 pthread_mutex_t mutexRoom;
 pthread_mutex_t mutexStep;
 

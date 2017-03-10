@@ -187,6 +187,7 @@ interface(void *cube_ref)
 	using_history();
 	while (1)
 	{
+		
 		line = readline("cube> ");
 		if (line == NULL) continue;
 		if (strlen(line) == 0) continue;
@@ -226,6 +227,7 @@ interface(void *cube_ref)
 				pthread_mutex_init(&mutexRoom, NULL);
 				sem_init(&continuousMove, 0, 0);
 				sem_init(&singleStepMove, 0, 0);
+				
 
 				//create the threads team A wizards
 				for (j = 0; j < cube->teamA_size; j++) {
@@ -260,6 +262,8 @@ interface(void *cube_ref)
 		}
 
 		free(line);
+		//sem_post(&commandLineCurser);
+		sem_wait(&commandLineCurser);
 	}
 
 	return 0;
@@ -282,6 +286,7 @@ main(int argc, char** argv)
 	//threads to be created
 	aWizardThreads = (pthread_t*)malloc(DEFAULT_TEAM_SIZE * sizeof(pthread_t));
 	bWizardThreads = (pthread_t*)malloc(DEFAULT_TEAM_SIZE * sizeof(pthread_t));;
+	sem_init(&commandLineCurser, 0, 1);
 
 	assert(aWizardThreads);
 	assert(bWizardThreads);
@@ -601,6 +606,8 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 			other->team, other->id);
 
 		/* Fill in */
+		other->status = 1;
+		other->team = tolower(other->team);
 	}
 
 	/* Self freezes and release the lock */
@@ -611,6 +618,9 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 			other->team, other->id);
 
 		/* Fill in */
+
+		self->status = 1;
+		self->team = tolower(self->team);
 
 		return 1;
 	}
