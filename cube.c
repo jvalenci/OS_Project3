@@ -33,6 +33,8 @@ void
 kill_wizards(struct wizard *w)
 {
 	/* Fill in */
+	//i don't think we need this since i kill the thread a different way.
+	//its up to you if you want to change it.
 
 	return;
 }
@@ -41,6 +43,25 @@ int
 check_winner(struct cube* cube)
 {
 	/* Fill in */
+	int i;
+	if (aTeamFrozen == cube->teamA_size) {
+		cube->game_status = 1;
+		printf("Team B won the game!\n");
+	}
+	else if (bTeamFrozen == cube->teamB_size)
+	{
+		cube->game_status = 1;
+		printf("Team A won the game!\n");
+	}
+
+	if (cube->game_status == 1)
+	{
+		for (i = 0; i < cube->teamA_size + cube->teamB_size; i++)
+		{
+			sem_post(&singleStepMove);
+		}
+	}
+
 
 	return 0;
 }
@@ -675,26 +696,10 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 		self->team = tolower(self->team);
 		increFrozenCount(self);
 
-		//return 1;
-	}
-	if (aTeamFrozen == self->cube->teamA_size) {
-		self->cube->game_status = 1;
-		printf("Team B won the game!\n");
-	}
-	else if (bTeamFrozen == self->cube->teamB_size) 
-	{
-		self->cube->game_status = 1;
-		printf("Team A won the game!\n");
 	}
 
-	if (self->cube->game_status == 1)
-	{
-		for (i = 0; i < self->cube->teamA_size + self->cube->teamB_size; i++)
-		{
-			sem_post(&singleStepMove);
-		}
-	}
-	//sem_post(&commandLineCurser);
+	check_winner(self->cube);
+	
 
 	return 0;
 }
@@ -750,7 +755,7 @@ free_wizard(struct wizard *self, struct wizard *other, struct room* room)
 	{
 		printf("Wizard %c%d in room (%d,%d) unfreezes friend %c%d\n",
 			self->team, self->id, room->x, room->y,
-			other->team, other->id);
+			toupper(other->team), other->id);
 
 		/* Fill in */
 		other->status = 0;
@@ -762,7 +767,7 @@ free_wizard(struct wizard *self, struct wizard *other, struct room* room)
 		/* The spell failed */
 		printf("Wizard %c%d in room (%d,%d) fails to unfreeze friend %c%d\n",
 			self->team, self->id, room->x, room->y,
-			other->team, other->id);
+			toupper(other->team), other->id);
 	}
 
 	return 0;

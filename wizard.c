@@ -33,6 +33,7 @@ wizard_func(void *wizard_descr)
 		//sem_wait(&commandLineCurser);
 		sem_wait(&singleStepMove);
 
+		//kills the wizard
 		if (cube->game_status == 1) {
 			pthread_exit(NULL);
 		}
