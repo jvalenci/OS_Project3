@@ -11,8 +11,12 @@ struct cube;
 sem_t continuousMove;
 sem_t singleStepMove;
 sem_t commandLineCurser;
+sem_t incrATeamFrozen;
+sem_t increBTeamFrozen;
 pthread_mutex_t mutexRoom;
 pthread_mutex_t mutexStep;
+int aTeamFrozen;
+int bTeamFrozen;
 
 struct wizard {
 	int x;
@@ -51,6 +55,7 @@ extern void print_wizard(struct wizard *);
 extern void kill_wizards(struct wizard *);
 extern void print_cube(struct cube *);
 extern int check_winner(struct cube *);
+extern void increFrozenCount(const struct wizard *);
 
 extern void dostuff();
 extern struct room * choose_room(struct wizard*);

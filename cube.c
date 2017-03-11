@@ -227,6 +227,8 @@ interface(void *cube_ref)
 				pthread_mutex_init(&mutexRoom, NULL);
 				sem_init(&continuousMove, 0, 0);
 				sem_init(&singleStepMove, 0, 0);
+				sem_init(&increATeamFrozen, 0, 0);
+				sem_init(&increBTeamFrozen, 0, 0);
 				
 
 				//create the threads team A wizards
@@ -262,7 +264,6 @@ interface(void *cube_ref)
 		}
 
 		free(line);
-		//sem_post(&commandLineCurser);
 		sem_wait(&commandLineCurser);
 	}
 
@@ -275,6 +276,8 @@ main(int argc, char** argv)
 	int cube_size = DEFAULT_CUBE_SIZE;
 	int teamA_size = DEFAULT_TEAM_SIZE;
 	int teamB_size = DEFAULT_TEAM_SIZE;
+	aTeamFrozen = 0;
+	bTeamFrozen = 0;
 	unsigned seed = DEFAULT_SEED;
 	struct cube *cube;
 	struct room *room;
@@ -608,6 +611,7 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 		/* Fill in */
 		other->status = 1;
 		other->team = tolower(other->team);
+		increFrozenCount(other);
 	}
 
 	/* Self freezes and release the lock */
@@ -621,10 +625,29 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 
 		self->status = 1;
 		self->team = tolower(self->team);
+		increFrozenCount(self);
 
 		return 1;
 	}
 	return 0;
+}
+
+void increFrozenCount(const struct wizard * wiz)
+{
+	
+	if (tolower(wiz->team) == 'a')
+	{
+		sem_wait(&incrATeamFrozen);
+		aTeamFrozen++;
+		sem_post(&incrATeamFrozen);
+	}
+	else
+	{
+		sem_wait(&increBTeamFrozen);
+		bTeamFrozen++;
+		sem_post(&increBTeamFrozen);
+	}
+	
 }
 
 int
