@@ -37,6 +37,13 @@ wizard_func(void *wizard_descr)
 			pthread_exit(NULL);
 		}
 
+		//checks if wizard is frozen, 
+		if (self->status == 1)
+		{
+			sem_post(&commandLineCurser);
+			continue;
+		}
+
 		/* Loops until he's able to get a hold on both the old and new rooms */
 		while (1)
 		{
@@ -93,7 +100,7 @@ wizard_func(void *wizard_descr)
 		else
 		{
 			/* Other is from opposite team */
-			if (other->team != self->team)
+			if (tolower(other->team) != tolower(self->team))
 			{
 				/* Checks if the opponent is active */
 				if (other->status == 0)

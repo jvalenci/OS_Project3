@@ -187,10 +187,19 @@ int interface(void *cube_ref)
 	using_history();
 	while (1)
 	{
-		
+		sem_wait(&commandLineCurser);
+
 		line = readline("cube> ");
-		if (line == NULL) continue;
-		if (strlen(line) == 0) continue;
+		if (line == NULL)
+		{
+			sem_post(&commandLineCurser);
+			continue;
+		}
+		if (strlen(line) == 0)
+		{
+			sem_post(&commandLineCurser);
+			continue;
+		}
 
 		add_history(line);
 
@@ -239,6 +248,7 @@ int interface(void *cube_ref)
 				sem_init(&singleStepMove, 0, 0);
 				sem_init(&increATeamFrozen, 0, 1);
 				sem_init(&increBTeamFrozen, 0, 1);
+				sem_post(&commandLineCurser);
 				
 
 				//create the threads team A wizards
@@ -302,7 +312,6 @@ int interface(void *cube_ref)
 		}
 
 		free(line);
-		sem_wait(&commandLineCurser);
 	}
 
 	return 0;
@@ -685,11 +694,12 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 			sem_post(&singleStepMove);
 		}
 	}
-	sem_post(&commandLineCurser);
+	//sem_post(&commandLineCurser);
 
 	return 0;
 }
 
+//increments count of appropriate team
 void increFrozenCount(const struct wizard * wiz)
 {
 	
@@ -708,6 +718,25 @@ void increFrozenCount(const struct wizard * wiz)
 	
 }
 
+//increments count of appropriate team
+void decreFrozenCount(const struct wizard * wiz)
+{
+
+	if (tolower(wiz->team) == 'a')
+	{
+		sem_wait(&increATeamFrozen);
+		aTeamFrozen--;
+		sem_post(&increATeamFrozen);
+	}
+	else
+	{
+		sem_wait(&increBTeamFrozen);
+		bTeamFrozen--;
+		sem_post(&increBTeamFrozen);
+	}
+
+}
+
 int
 free_wizard(struct wizard *self, struct wizard *other, struct room* room)
 {
@@ -724,12 +753,17 @@ free_wizard(struct wizard *self, struct wizard *other, struct room* room)
 			other->team, other->id);
 
 		/* Fill in */
+		other->status = 0;
+		other->team = toupper(other->team);
+		decreFrozenCount(other);
 	}
-
-	/* The spell failed */
-	printf("Wizard %c%d in room (%d,%d) fails to unfreeze friend %c%d\n",
-		self->team, self->id, room->x, room->y,
-		other->team, other->id);
+	else
+	{
+		/* The spell failed */
+		printf("Wizard %c%d in room (%d,%d) fails to unfreeze friend %c%d\n",
+			self->team, self->id, room->x, room->y,
+			other->team, other->id);
+	}
 
 	return 0;
 }
