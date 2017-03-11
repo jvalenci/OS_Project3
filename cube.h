@@ -11,7 +11,7 @@ struct cube;
 sem_t continuousMove;
 sem_t singleStepMove;
 sem_t commandLineCurser;
-sem_t incrATeamFrozen;
+sem_t increATeamFrozen;
 sem_t increBTeamFrozen;
 pthread_mutex_t mutexRoom;
 pthread_mutex_t mutexStep;

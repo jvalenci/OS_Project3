@@ -33,6 +33,10 @@ wizard_func(void *wizard_descr)
 		//sem_wait(&commandLineCurser);
 		sem_wait(&singleStepMove);
 
+		if (cube->game_status == 1) {
+			pthread_exit(NULL);
+		}
+
 		/* Loops until he's able to get a hold on both the old and new rooms */
 		while (1)
 		{
