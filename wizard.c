@@ -30,7 +30,6 @@ wizard_func(void *wizard_descr)
 	/* Infinite loop */
 	while (1)
 	{
-		//sem_wait(&commandLineCurser);
 		sem_wait(&singleStepMove);
 
 		//kills the wizard
@@ -38,56 +37,46 @@ wizard_func(void *wizard_descr)
 			pthread_exit(NULL);
 		}
 
-		//checks if wizard is frozen, 
+		//checks if wizard is frozen,
 		if (self->status == 1)
 		{
-			sem_post(&commandLineCurser);
+			// if this wizard is frozen, allow another wizard to take the move
+			sem_post(&singleStepMove);
+			dostuff();
 			continue;
 		}
 
-		/* Loops until he's able to get a hold on both the old and new rooms */
-		while (1)
+
+		printf("Wizard %c%d in room (%d,%d) wants to go to room (%d,%d)\n",
+			self->team, self->id, oldroom->x, oldroom->y, newroom->x, newroom->y);
+
+		//locks until if find a room to be in so multi wizards are not getting into the same room
+		pthread_mutex_lock(&mutexRoom);
+
+		if (try_room(self, oldroom, newroom)) // room is full
 		{
-			
-			printf("Wizard %c%d in room (%d,%d) wants to go to room (%d,%d)\n",
-				self->team, self->id, oldroom->x, oldroom->y, newroom->x, newroom->y);
+			/* Waits a random amount of time */
+			dostuff();
 
-			//locks until if find a room to be in so multi wizards are not getting into the same room
-			pthread_mutex_lock(&mutexRoom);
+			/* Chooses the new room */
+			newroom = choose_room(self);
 
-			if (try_room(self, oldroom, newroom))
-			{
-				/* Waits a random amount of time */
-				dostuff();
+			printf("Request denied, room locked!\n");
+			pthread_mutex_unlock(&mutexRoom);
+			sem_post(&commandLineCurser);
 
-				/* Chooses the new room */
-				newroom = choose_room(self);
-
-				printf("Request denied, room locked!\n");
-				pthread_mutex_unlock(&mutexRoom);
-				sem_post(&commandLineCurser);
-				sem_wait(&singleStepMove);
-
-				/* Goes back to the initial state and try again */
-				continue;
-			}
-			else
-			{
-				break;
-			}
+			/* Goes back to the initial state and try again */
+			continue;
 		}
+
+		// room is not full
 
 		printf("Wizard %c%d in room (%d,%d) moves to room (%d,%d)\n",
 			self->team, self->id,
 			oldroom->x, oldroom->y, newroom->x, newroom->y);
 
-		/* Fill in */
-
 		/* Self is active and has control over both rooms */
 		switch_rooms(self, oldroom, newroom);
-
-		//unlocks once a wizard is in a roomm
-		pthread_mutex_unlock(&mutexRoom);
 
 		other = find_opponent(self, newroom);
 
@@ -96,7 +85,6 @@ wizard_func(void *wizard_descr)
 		{
 			printf("Wizard %c%d in room (%d,%d) finds nobody around\n",
 				self->team, self->id, newroom->x, newroom->y);
-			/* Fill in */
 		}
 		else
 		{
@@ -126,9 +114,12 @@ wizard_func(void *wizard_descr)
 					free_wizard(self, other, newroom);
 				}
 			}
-
-			/* Fill in */
 		}
+
+		// unlocks once a wizard is in a room and has taken action
+		// (don't want other wizards moving around while you're trying
+		// to fight or heal)
+		pthread_mutex_unlock(&mutexRoom);
 
 		/* Thinks about what to do next */
 		dostuff();
