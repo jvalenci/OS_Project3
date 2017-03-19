@@ -270,7 +270,7 @@ int interface(void *cube_ref)
 				sem_init(&increATeamFrozen, 0, 1);
 				sem_init(&increBTeamFrozen, 0, 1);
 				sem_post(&commandLineCurser);
-				
+
 
 				//create the threads team A wizards
 				for (j = 0; j < cube->teamA_size; j++) {
@@ -309,10 +309,19 @@ int interface(void *cube_ref)
 		{
 			if (cube->game_status == 0)
 			{
-				for (j = 0; j < (cube->teamA_size + cube->teamB_size); j++)
-				{
-					sem_post(&continuousMove);
-				}
+				// for (j = 0; j < (cube->teamA_size + cube->teamB_size); j++)
+				// {
+				// 	sem_post(&continuousMove);
+				// }
+
+				// keep performing moves one at a time until the game is over
+				do {
+					sem_post(&singleStepMove);
+					sem_wait(&commandLineCurser);
+				} while (cube->game_status != 1);
+
+				// return to cube interface
+				sem_post(&commandLineCurser);
 			}
 			else if (cube->game_status == 1)
 			{
@@ -699,7 +708,7 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 	}
 
 	check_winner(self->cube);
-	
+
 
 	return 0;
 }
@@ -707,7 +716,7 @@ fight_wizard(struct wizard *self, struct wizard *other, struct room *room)
 //increments count of appropriate team
 void increFrozenCount(const struct wizard * wiz)
 {
-	
+
 	if (tolower(wiz->team) == 'a')
 	{
 		sem_wait(&increATeamFrozen);
@@ -720,7 +729,7 @@ void increFrozenCount(const struct wizard * wiz)
 		bTeamFrozen++;
 		sem_post(&increBTeamFrozen);
 	}
-	
+
 }
 
 //increments count of appropriate team
